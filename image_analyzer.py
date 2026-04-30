@@ -33,8 +33,8 @@ th2 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_MEAN_C,\
 th3 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
             cv.THRESH_BINARY,11,2)
 
-titles = ['Original Image', 'Global Thresholding (v = 127)',
-            'Adaptive Mean Thresholding', 'Adaptive Gaussian Thresholding']
+titles = ['Original Image [0]', 'Global Thresholding (v = 127)[1]',
+            'Adaptive Mean Thresholding[2]', 'Adaptive Gaussian Thresholding[3]']
 images = [img, th1, th2, th3]
 
 plt.figure("Correzione impurezze")
@@ -64,7 +64,7 @@ plt.subplot(122),plt.imshow(edges,cmap = 'gray')
 plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 
 # edges è già in scala di grigi
-ret, thresh = cv.threshold(edges, 127, 255, 0)          #<--- ho messo qui il pure per evitare sporcizia
+ret, thresh = cv.threshold(th1, 127, 255, 0)          #<--- ho messo qui il edges per evitare sporcizia
 contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
 # Stampa informazioni sui contorni
@@ -146,10 +146,32 @@ if img_color is not None and len(contours) > 0:
                 getCoord(id)
 #####
     #INCOLLA QUI I getCoord()
-    selezione = np.array([2083, 2082, 2042, 2459, 2458, 2041, 1223, 1222, 2523, 2522
-                          ,24, 574, 593, 541, 395, 1908, 1909, 2638, 306, 1949, 2288, 1950, 23, 2639, 325, 2287, 279, 323
-                          ])
+    selezione = np.array([613, 287, 612, 487, 505, 523,
+                          419, 250, 405, 207, 379, 372,
+                          132, 531, 213, 468, 656, 271,
+                          696, 667, 408, 602, 112, 216,
+                          388, 417, 628, 642])
     selezioneContorni(selezione)
+
+    #stampa tutti i contorni selezionati (scartando gli errori)
+    img_contorni_finali = img_color.copy()
+    
+    # Cicliamo su tutti i contorni trovati all'inizio
+    for id_corrente in top_ids:
+        # Se l'ID NON è nella lista degli scarti, allora è un pezzo buono della catena!
+        if id_corrente not in selezione:
+            if id_corrente < len(contours): 
+                # (0, 0, 255) è il colore rosso, 3 è lo spessore
+                cv.drawContours(img_contorni_finali, [contours[id_corrente]], 0, (0, 0, 255), 3)
+
+    # Creazione della finestra Matplotlib dedicata
+    plt.figure("Catenaria Finale Selezionata")
+    plt.imshow(cv.cvtColor(img_contorni_finali, cv.COLOR_BGR2RGB))
+    
+    # Calcoliamo quanti contorni sono sopravvissuti per il titolo
+    contorni_buoni = len(top_ids) - len(selezione)
+    plt.title(f"I {contorni_buoni} contorni salvati per il Fit")
+    plt.axis('off')
 
     # CALCOLO DELLA LINEA CENTRALE E SALVATAGGIO DEFINITIVO
     print("\nCalcolo della linea centrale in corso...")

@@ -3,16 +3,36 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.stats import chi2
+import matplotlib as mpl
 import sys
 
 # --- GESTIONE INPUT ---
 if len(sys.argv) > 1:
     coord_path = sys.argv[1]
+    bg_path = sys.argv[2]
+    img1 = sys.argv[3]
+
 else:
     # Fallback per test o errore
     print("Nessun file specificato, uso percorso default o esco.")
     # coord_path = "./catenaria/coord.txt" # Decommenta se vuoi un default
     sys.exit(1)
+    img1 = False
+
+#convertitore da stringa a bool
+if img1 == 'True' or img1 == 'true':
+    img1 = True
+elif img1 == 'False' or img1 == 'false':
+    img1 = False
+
+if img1:
+    mpl.use("pgf")
+
+    plt.rcParams.update({
+        "font.family": "serif",     
+        "text.usetex": True,
+        "pgf.rcfonts": False,
+    })
 
 data = np.loadtxt(coord_path, delimiter=" ")
 
@@ -21,8 +41,8 @@ image = plt.imread('photos/exp1.jpg')
 # --- CALCOLO ERRORI ---
 # Sensibilità dello strumento (pixel). 
 # Un valore di 1.0 assume un'incertezza di +/- 1 pixel su ogni punto.
-errore_x = 4.3 
-errore_y = 4.3 
+errore_x = 4.
+errore_y = 4. 
 
 # np.full crea un array lungo quanto i dati, riempito con il valore dell'errore
 devStdX = np.full(len(data[:, 0]), errore_x)
@@ -95,6 +115,7 @@ a_fin, b_fin, c_fin = popt
 perr = np.sqrt(np.diag(pcov)) 
 
 print(f"Parametri ottimizzati:\n a (shape) = {a_fin:.4f}\n b (x0)    = {b_fin:.4f}\n c (y0)    = {c_fin:.4f}")
+print(f"pcvo: {pcov}")
 
 # --- Calcolo Residui e Chi2 ---
 y_model = catenaria(data[:, 0], a_fin, b_fin, c_fin)
@@ -117,13 +138,14 @@ print(f"Gradi di libertà (ndof): {ndof}")
 print(f"chi2 ridotto: {chi2_ridotto:.2f}")
 
 # --- Grafico con Sfondo Immagine ---
-plt.figure("Verifica Visiva Fit", figsize=(10, 10))
+fig1 = plt.figure(1)
+#plt.figure("Verifica Visiva Fit", figsize=(10, 10))
 
-# 1. Carica l'immagine originale e mostrala come sfondo
-img = plt.imread("/home/matteo/Documenti/uni/lab/catenaria/photos/exp1.jpg")
+#Carica l'immagine come sfondo
+img = plt.imread(bg_path) ##!!!!
 plt.imshow(img, cmap='gray') # Mostra l'immagine
 
-# 2. Traccia i dati grezzi (quelli invertiti salvati nel file)
+# Traccia i dati grezzi
 # Poiché imshow ha già l'origine in alto a sinistra, e i dati sono invertiti, 
 # dobbiamo "re-invertirli" per metterli nel posto giusto.
 # L'inversione 'height - y' è stata fatta in catenaria.py.
@@ -146,7 +168,7 @@ plt.axis('off') # Nascondi gli assi per una visualizzazione pulita
 plt.tight_layout()
 #plt.show()
 
-fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, height_ratios=[3, 1], figsize=(8, 8))
+fig2, (ax1, ax2) = plt.subplots(2, 1, sharex=True, height_ratios=[3, 1], figsize=(8, 8))
 
 # Grafico Best Fit
 ax1.errorbar(data[:,0], data[:,1], yerr=devStdY, xerr=devStdX, fmt='+', alpha=0.5, label='Dati')
@@ -168,4 +190,9 @@ ax2.set_xlabel("X")
 ax2.grid(ls='dashed')
 
 plt.tight_layout()
-plt.show()
+
+if img1:
+    fig2.savefig('grafico_fit.pgf')
+    fig1.savefig('fit_back.pdf')
+else:
+    plt.show()

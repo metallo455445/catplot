@@ -1,4 +1,4 @@
-#py ./catenaria/FITcatenaria.py ./catenaria/coord.txt
+#py ./catenaria/FITcatenaria.py bg_image ./catenaria/coord.txt
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
@@ -10,22 +10,22 @@ import sys
 if len(sys.argv) > 1:
     coord_path = sys.argv[1]
     bg_path = sys.argv[2]
-    img1 = sys.argv[3]
+    pgf_image = sys.argv[3]
 
 else:
     # Fallback per test o errore
     print("Nessun file specificato, uso percorso default o esco.")
     # coord_path = "./catenaria/coord.txt" # Decommenta se vuoi un default
     sys.exit(1)
-    img1 = False
+    pgf_image = False
 
 #convertitore da stringa a bool
-if img1 == 'True' or img1 == 'true':
-    img1 = True
-elif img1 == 'False' or img1 == 'false':
-    img1 = False
+if pgf_image == 'True' or pgf_image == 'true':
+    pgf_image = True
+elif pgf_image == 'False' or pgf_image == 'false':
+    pgf_image = False
 
-if img1:
+if pgf_image:
     mpl.use("pgf")
 
     plt.rcParams.update({
@@ -35,8 +35,6 @@ if img1:
     })
 
 data = np.loadtxt(coord_path, delimiter=" ")
-
-image = plt.imread('photos/exp1.jpg')
 
 # --- CALCOLO ERRORI ---
 # Sensibilità dello strumento (pixel). 
@@ -191,7 +189,7 @@ ax2.grid(ls='dashed')
 
 plt.tight_layout()
 
-if img1:
+if pgf_image:
     fig2.savefig('grafico_fit.pgf')
     fig1.savefig('fit_back.pdf')
 else:

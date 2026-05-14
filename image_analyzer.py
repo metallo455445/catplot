@@ -5,13 +5,19 @@ import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
 import sys
+from pathlib import Path
 
-# Ottieni il percorso del file dall'argomento
+# percorso del file dall'argomento
+script_dir = Path(__file__).parent.absolute()
+
+coord_path = str(script_dir) + '/temp/coord.txt'
+error_path = str(script_dir) + '/temp/errors.txt'
+
 if len(sys.argv) > 1:
     file_path = sys.argv[1]
     #contour_index = int(sys.argv[2]) if len(sys.argv) > 2 else 4   #<--Non uso più questo variabile, la rimuovo
     n_top_countours = int(sys.argv[2]) if len(sys.argv) > 2 else 5  #aggionato il nomero dell'argv da 3 a 2
-    coord_path = sys.argv[3]                                        #aggiunto, in effetti è comodo passarlo da terminale
+    #coord_path = sys.argv[3]                                        #aggiunto, in effetti è comodo passarlo da terminale
 else:
     file = input("Inserisci il nome del file: ")
     file_path = './' + file
@@ -64,7 +70,7 @@ plt.subplot(122),plt.imshow(edges,cmap = 'gray')
 plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 
 # edges è già in scala di grigi
-ret, thresh = cv.threshold(th1, 127, 255, 0)          #<--- ho messo qui il edges per evitare sporcizia
+ret, thresh = cv.threshold(edges, 127, 255, 0)          #<--- ho messo qui il edges per evitare sporcizia
 contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
 # Stampa informazioni sui contorni
@@ -146,11 +152,11 @@ if img_color is not None and len(contours) > 0:
                 getCoord(id)
 #####
     #INCOLLA QUI I getCoord()
-    selezione = np.array([613, 287, 612, 487, 505, 523,
-                          419, 250, 405, 207, 379, 372,
-                          132, 531, 213, 468, 656, 271,
-                          696, 667, 408, 602, 112, 216,
-                          388, 417, 628, 642])
+    selezione = np.array([2083, 2184, 2028, 2183, 2082, 593, 24, 2639, 1950, 1609, 2022, 23, 2208, 574, 325, 1619, 1949,
+                          306, 2638, 1909, 541, 395, 1908, 323, 1602, 2287, 2129, 1222, 2341, 2522, 1223, 2523, 2342, 2042,
+                          2041, 2459, 2458, 1937, 279,
+                          
+                          1380, 2147, 2143, 1630, 1434, 1472, 1494, 1561, 1550, 1993, 1741, 2121, 1766, 922])
     selezioneContorni(selezione)
 
     #stampa tutti i contorni selezionati (scartando gli errori)
@@ -188,6 +194,17 @@ if img_color is not None and len(contours) > 0:
             # Scrive sul file la X e la Y media (con 2 cifre decimali)
             f.write(f"{x_corrente} {y_media:.2f}\n")
             
+    with open(error_path, "w") as f:
+        # Ordina le X dalla più piccola alla più grande (utile per i fit successivi!)
+        for x_corrente in sorted(coordinate_grezze.keys()):
+            lista_y = coordinate_grezze[x_corrente]
+            
+            # errore distribuzione uniforme
+            error = (max(lista_y) - min(lista_y)) / np.sqrt(12) 
+            
+            # Scrive sul file la X e la Y media (con 2 cifre decimali)
+            f.write(f"{error:.2f}\n")
+
     print(f"File {coord_path} generato con successo! Punti mediati salvati.")
 else:
     print("Impossibile caricare l'immagine a colori o nessun contorno trovato")

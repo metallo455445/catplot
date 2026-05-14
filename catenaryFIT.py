@@ -5,12 +5,19 @@ from scipy.optimize import curve_fit
 from scipy.stats import chi2
 import matplotlib as mpl
 import sys
+from pathlib import Path
+
+# percorso del file dall'argomento
+script_dir = Path(__file__).parent.absolute()
+
+coord_path = str(script_dir) + '/temp/coord.txt'
+error_path = str(script_dir) + '/temp/errors.txt'
 
 # --- GESTIONE INPUT ---
 if len(sys.argv) > 1:
-    coord_path = sys.argv[1]
-    bg_path = sys.argv[2]
-    pgf_image = sys.argv[3]
+    #coord_path = sys.argv[1]
+    bg_path = sys.argv[1]
+    pgf_image = sys.argv[2]
 
 else:
     # Fallback per test o errore
@@ -39,15 +46,25 @@ data = np.loadtxt(coord_path, delimiter=" ")
 # --- CALCOLO ERRORI ---
 # Sensibilità dello strumento (pixel). 
 # Un valore di 1.0 assume un'incertezza di +/- 1 pixel su ogni punto.
-errore_x = 4.
-errore_y = 4. 
+errore_x = 7.
+
+errore_y = np.empty(len(data[:, 0]))
+
+yerr = np.loadtxt(error_path, delimiter=' ')
+
+#se l'errore è 0 vuol dire chè su quella y c'è solo un punto e che quindi avrà un errore di 1 pixel
+for i in range(len(yerr)):
+    if yerr[i] != 0:
+        errore_y[i] = yerr[i]
+    else:
+        errore_y[i] = 1
 
 # np.full crea un array lungo quanto i dati, riempito con il valore dell'errore
 devStdX = np.full(len(data[:, 0]), errore_x)
-devStdY = np.full(len(data[:, 1]), errore_y)
+#devStdY = np.full(len(data[:, 1]), errore_y)
 
 sx = devStdX
-sy = devStdY
+sy = errore_y
 
 print(f"Errore X impostato a: {errore_x} pixel")
 print(f"Errore Y impostato a: {errore_y} pixel")
@@ -74,7 +91,6 @@ def derivata_catenaria(x, a, b):
 x_data = data[:, 0]
 y_data = data[:, 1]
 sx = devStdX  
-sy = devStdY
 
 # --- STIMA INIZIALE PARAMETRI (Guess) ---
 p0_a = 100.0                # Valore arbitrario di partenza per la curvatura
@@ -120,7 +136,7 @@ y_model = catenaria(data[:, 0], a_fin, b_fin, c_fin)
 
 # Sigma efficace finale per il chi2
 df_dx_final = derivata_catenaria(data[:, 0], a_fin, b_fin)
-sigma_eff_final = np.sqrt(devStdY**2 + (df_dx_final * devStdX)**2)
+sigma_eff_final = np.sqrt(errore_y**2 + (df_dx_final * devStdX)**2)
 
 # Residui normalizzati (pull)
 residui = (data[:, 1] - y_model) / sigma_eff_final
@@ -169,7 +185,7 @@ plt.tight_layout()
 fig2, (ax1, ax2) = plt.subplots(2, 1, sharex=True, height_ratios=[3, 1], figsize=(8, 8))
 
 # Grafico Best Fit
-ax1.errorbar(data[:,0], data[:,1], yerr=devStdY, xerr=devStdX, fmt='+', alpha=0.5, label='Dati')
+ax1.errorbar(data[:,0], data[:,1], yerr=errore_y, xerr=devStdX, fmt='+', alpha=0.5, label='Dati')
 
 # Generazione linea fit
 x_plot = np.linspace(min(data[:,0]), max(data[:,0]), 1000)

@@ -13,6 +13,7 @@ script_dir = Path(__file__).parent.absolute()
 
 coord_path = str(script_dir) + '/temp/coord.txt'
 error_path = str(script_dir) + '/temp/errors.txt'
+bContours  = str(script_dir) + '/temp/bad_cont.txt'
 
 if len(sys.argv) > 1:
     file_path = sys.argv[1]

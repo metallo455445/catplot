@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import sys
 from pathlib import Path
+from matplotlib.widgets import RadioButtons
 
 # percorso del file dall'argomento
 script_dir = Path(__file__).parent.absolute()
@@ -28,7 +29,7 @@ else:
 open(coord_path, 'w').close()   #formatta il file delle coord prima di riscrivere
 #percorso file coordinate punti della parabola da fittare
 
-# Usa file_path ovunque
+# Usa i filtri
 img = cv.imread(file_path, cv.IMREAD_GRAYSCALE)
 assert img is not None, f"file {file_path} could not be read, check file path/integrity"
 img = cv.medianBlur(img,5)
@@ -39,32 +40,54 @@ th2 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_MEAN_C,\
 th3 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
             cv.THRESH_BINARY,11,2)
 
-titles = ['Original Image [0]', 'Global Thresholding (v = 127)[1]',
-            'Adaptive Mean Thresholding[2]', 'Adaptive Gaussian Thresholding[3]']
+titles = ['Original Image', 'Global Thresholding (v = 127)',
+            'Adaptive Mean Thresholding', 'Adaptive Gaussian Thresholding']
 images = [img, th1, th2, th3]
 
-plt.figure("Correzione impurezze")
+selected_image = img  # Default to the original image
+
+fig = plt.figure("Correzione impurezze", figsize=(10, 6))
+
 for i in range(4):
-    plt.subplot(2,2,i+1),plt.imshow(images[i],'gray')
-    plt.title(titles[i])
-    plt.xticks([]),plt.yticks([])
+    row = i // 2
+    col = (i % 2) * 2  
+    
+    ax = plt.subplot2grid((2, 5), (row, col), colspan=2)
+    ax.imshow(images[i], 'gray')
+    ax.set_title(titles[i])
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+ax_radio = plt.subplot2grid((2, 5), (0, 4), rowspan=2, facecolor='0.95')
+radio = RadioButtons(ax_radio, ['Original Image', 'Global', 'Mean', 'Gaussian'])
+
+def cleaning_selector(label):
+    global selected_image
+    if label == 'Original Image':
+        selected_image = img
+    elif label == 'Global':
+        selected_image = th1
+    elif label == 'Mean':
+        selected_image = th2
+    elif label == 'Gaussian':
+        selected_image = th3
+    print(f"Filtro selezionato: {label}")
+
+radio.on_clicked(cleaning_selector)
+
+plt.tight_layout()
+
+plt.subplots_adjust(right=0.95)
+
+print("Seleziona l'immagine desiderata dai Radio Buttons.")
+print("Una volta fatta la scelta, CHIUDI la finestra per proseguire con l'edge detection.")
+plt.show()
 
 #edge detection partendo dall'immagine pura         <---
-plt.figure("edge detection pura")
-edges = cv.Canny(img, 100, 200)
+plt.figure("edge detection")
+edges = cv.Canny(selected_image, 100, 200)
 
-edgesPURE = edges
-
-plt.subplot(121),plt.imshow(img,cmap = 'gray')
-plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-plt.subplot(122),plt.imshow(edges,cmap = 'gray')
-plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-
-#edge detection post pulizia dell'adattiva gaussiana
-plt.figure("edge detection from gaussian")
-edges = cv.Canny(th3, 100, 200)
-
-plt.subplot(121),plt.imshow(img,cmap = 'gray')
+plt.subplot(121),plt.imshow(selected_image,cmap = 'gray')
 plt.title('Original Image'), plt.xticks([]), plt.yticks([])
 plt.subplot(122),plt.imshow(edges,cmap = 'gray')
 plt.title('Edge Image'), plt.xticks([]), plt.yticks([])

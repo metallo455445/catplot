@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import sys
 from pathlib import Path
-from matplotlib.widgets import RadioButtons
+from matplotlib.widgets import Button, RadioButtons
 
 # percorso del file dall'argomento
 script_dir = Path(__file__).parent.absolute()
@@ -136,6 +136,16 @@ if img_color is not None and len(contours) > 0:
     # Inizializza un dizionario globale per raccogliere i punti PRIMA di getCoord
     coordinate_grezze = {}
 
+    def click_ok(event):
+        plt.close()
+
+    def click_no(numero, nome_file):
+        with open(nome_file, 'a') as file:
+            file.write(f"{numero}\n")
+        print(f"Aggiunto il numero {numero} al file {nome_file}!")
+        plt.close()
+
+
     def getCoord(indiceContornoTarget):
         print(f"Coords di contorno {indiceContornoTarget}")
         if len(contours) > indiceContornoTarget:       
@@ -165,22 +175,39 @@ if img_color is not None and len(contours) > 0:
                 cv.circle(img_single, p_plot, 2, (255, 0, 0), -1)
 
             cv.drawContours(img_single, [cnt], 0, (0,0,255), 3)
-            plt.figure(f"Contorno {indiceContornoTarget}")
-            plt.imshow(cv.cvtColor(img_single, cv.COLOR_BGR2RGB))
-            plt.title(f'Contorno {indiceContornoTarget} (Visualizzazione Standard)')
+            fig_scelta = plt.figure(f"Contorno {indiceContornoTarget}")
+
+            #asse principale per l'immagine
+            ax_img = plt.axes([0.1, 0.25, 0.8, 0.7])
+
+            #stampa immagine nell'asse appena creato
+            ax_img.imshow(cv.cvtColor(img_single, cv.COLOR_BGR2RGB))
+            ax_img.set_title(f'Contorno {indiceContornoTarget} (Visualizzazione Standard)')
+            ax_img.axis('off')
+
+            # Testo informativo opzionale tra l'immagine e i bottoni
+            fig_scelta.text(0.5, 0.18, "L'immagine è corretta? Premi OK o NO.", ha='center', fontsize=12)
+
+            ax_btn1 = plt.axes([0.25, 0.05, 0.2, 0.1])
+            ax_btn2 = plt.axes([0.55, 0.05, 0.2, 0.1])
+
+            btn1 = Button(ax_btn1, 'OK')
+            btn2 = Button(ax_btn2, 'NO')
+
+            btn1.on_clicked(click_ok)
+            btn2.on_clicked(lambda event: click_no(indiceContornoTarget, bContours))
+
+            plt.show()
+
 
     def selezioneContorni(select):
-        i = 0
         for id in top_ids:
             if id not in select:
                 getCoord(id)
-#####
-    #INCOLLA QUI I getCoord()
-    selezione = np.array([2083, 2184, 2028, 2183, 2082, 593, 24, 2639, 1950, 1609, 2022, 23, 2208, 574, 325, 1619, 1949,
-                          306, 2638, 1909, 541, 395, 1908, 323, 1602, 2287, 2129, 1222, 2341, 2522, 1223, 2523, 2342, 2042,
-                          2041, 2459, 2458, 1937, 279,
-                          
-                          1380, 2147, 2143, 1630, 1434, 1472, 1494, 1561, 1550, 1993, 1741, 2121, 1766, 922])
+
+    #preleva i contorni da scartare dal file di testo (se esiste) e li passa alla funzione selezioneContorni
+    selezione = np.loadtxt(bContours, dtype=int) if Path(bContours).exists() else []
+
     selezioneContorni(selezione)
 
     #stampa tutti i contorni selezionati (scartando gli errori)

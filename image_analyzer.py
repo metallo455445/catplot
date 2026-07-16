@@ -28,7 +28,6 @@ else:
     coord_path = './coord.txt'
 
 open(coord_path, 'w').close()   #formatta il file delle coord prima di riscrivere
-#percorso file coordinate punti della parabola da fittare
 
 # Usa i filtri
 img = cv.imread(file_path, cv.IMREAD_GRAYSCALE)

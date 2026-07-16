@@ -1,4 +1,7 @@
 # catplot
+
+![Alt text](sprites/catty.png)
+
 Software for catenary analysis
 
 ⚠️WIP⚠️~currently suspended due to exams at UNIPI Physics :)

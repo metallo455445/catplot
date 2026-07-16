@@ -1,6 +1,3 @@
-#py ./catenaria/catenaria.py ./catenaria/catenaTerraPulita.png 20 ./catenaria/coord.txt
-#^py     ^percorso file .py          ^percorso file di rif     ^numero di bordi da mostare   ^percorso del file su cui salvare le coordinate
-#                                                                                                                   se non esiste, lo crea
 import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt

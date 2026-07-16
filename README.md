@@ -15,3 +15,10 @@ For any problem or request create an issue or contact me on m.leonardi16@student
 ## Report
 
 [Download Report](report/main.pdf)
+
+## Relese Notes
+
+|version|.|month|.|relese|
+- Beta 0.5.1 The selection of the borders must be made manually and the user need to modify the code
+- Beta 0.7.2 Filters now can be chosen in the dialog window
+- Beta 0.7.2 The selection of the borders now can be made directy on the dialog window
